@@ -1,0 +1,1 @@
+The code in BigmarketAnalysis.py performs Various data science operations such as basic statistics, data visualisation,Supervised and Unsupervised Learning, SMOTE,Time-Series Forecasting and Deep Learning  on the BigMarket Dataset(train.csv) to gain various useful insights to the users in order to find best possible shoping store in their nearby region 
