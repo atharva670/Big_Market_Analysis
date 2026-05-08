@@ -1,7 +1,7 @@
-#Basic Statistics
 import pandas as pd
 import numpy as np
 import math
+
 # Data cleaning
 
 data = pd.read_csv('train.csv')
@@ -271,7 +271,6 @@ Z = (X - Y) / d
 print("Z-Value=", Z)
 print("Since Z-value is near to Zero , p-value is very High")
 print("Fail to reject H0")
-#Data Visualisation
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -392,7 +391,6 @@ plt.show()
 df['Outlet_Type'].value_counts().plot.pie()
 plt.savefig('plot1.png',dpi=300,bbox_inches='tight')
 plt.show()
-#Supervised Learning
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression,LinearRegression
 from sklearn.model_selection import train_test_split
@@ -521,7 +519,6 @@ print('MSE=',mean_squared_error(predc,Y5_test))
 print('RMSE=',math.sqrt(mean_squared_error(predc,Y5_test)))
 print('R2 Score=',r2_score(Y5_test,predc))
 print(pc)
-#Unsupervised Learning
 from sklearn.cluster import KMeans,DBSCAN
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -604,136 +601,88 @@ Y1=pd.DataFrame(Yv,columns=['Outlet_Type'])
 df2=pd.concat([X1,Y1],axis=1)
 df3=pd.concat([df,df2],axis=1)
 print(df3)
-#Time Series
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
+from sklearn.metrics import mean_absolute_error,mean_squared_error,r2_score
+import math
 df = pd.read_excel('AirPassengers.xlsx')
 df['Month'] = pd.to_datetime(df['Month'])
 df.set_index('Month', inplace=True)
-df.index.freq='MS'
+df=df.asfreq('MS')
+print('Current Prediction')
+print(df)
 data = df['#Passengers']   
-plt.plot(data)
-plt.title("Time Series Data")
-plt.show()
-train = data[:int(len(data)*0.8)]
-test = data[int(len(data)*0.8):]
-model = ARIMA(train, order=(1,1,1))
+model = ARIMA(df, order=(1,1,1))
 model_fit = model.fit()
-pred = model_fit.forecast(steps=len(test))
-plt.plot(train, label='Train')
-plt.plot(test, label='Actual')
-plt.plot(pred, label='Predicted')
+pred = model_fit.forecast(steps=12)
+pred=pred.astype('int64')
+print('Future Prediction\n')
+print(pred)
+print(type(pred))
+plt.plot(pred,color='red',label='Date vs Values',marker='o')
 plt.legend()
-plt.show() 
-#Deep Learning
+plt.xlabel('Current')
+plt.ylabel('Forecasted')
+plt.show()
+train=data[:int(len(data)*0.8)]
+test=data[int(len(data)*0.8):]
+model1 = ARIMA(train, order=(1,1,1))
+model_fit1 = model1.fit()
+pred1 = model_fit1.forecast(steps=len(test))
+pred1=pred1.astype('int64')
+df4=pd.DataFrame({'Actual':test,'Predicted':pred1})
+print(df4)
+print('MAE',mean_absolute_error(pred1,test))
+print('MSE',mean_squared_error(pred1,test))
+print('RMSE',math.sqrt(mean_absolute_error(pred1,test)))
+print('R2 Score',r2_score(test,pred1))
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler,LabelEncoder
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input
-
-
 df = pd.read_csv('train.csv')
-
-
-df = df.drop(['Item_Identifier', 'Outlet_Identifier'], axis=1)
-
-
-df.fillna(df.mean(numeric_only=True), inplace=True)
-
-for col in df.select_dtypes(include='object').columns:
-    df[col].fillna(df[col].mode()[0], inplace=True)
-
-
-df = pd.get_dummies(df, drop_first=True)
-
-
-X = df.drop('Item_Outlet_Sales', axis=1)
+obj1=LabelEncoder()
+l=df.select_dtypes(include=['object']).columns
+print(l)
+for i in l:
+    df[i]=obj1.fit_transform(df[i])
+print(df)
+l1=[]
+for i in df.columns:
+    if(i!='Item_Outlet_Sales'):
+        l1.append(i)
+X=df[l1]
+print(X)
 y = df['Item_Outlet_Sales']
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
-
-
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-
 model = Sequential([
     Input(shape=(X_train.shape[1],)),
     Dense(64, activation='relu'),
     Dense(32, activation='relu'),
     Dense(1)
 ])
-
-model.compile(optimizer='adam', loss='mse', metrics=['mae'])
-
-
-model.fit(X_train, y_train, epochs=50, batch_size=32, verbose=0)
-
-
+model.compile(optimizer='adam', loss='mse',metrics=['mae'])
+model.fit(X_train, y_train, epochs=50, batch_size=32)
 pred = model.predict(X_test)
-
-
+print(pred)
 mse = mean_squared_error(y_test, pred)
 rmse = np.sqrt(mse)
 mae = mean_absolute_error(y_test, pred)
 r2 = r2_score(y_test, pred)
-
-
-
-print("\n MODEL PERFORMANCE SUMMARY")
-print("-" * 40)
-
-print(f" Mean Absolute Error (MAE): {mae:.2f}")
-print(" On average, prediction is off by this much sales value")
-
-print(f"\n Root Mean Squared Error (RMSE): {rmse:.2f}")
-print(" Penalizes large errors more strongly")
-
-print(f"\n R² Score: {r2:.3f}")
-
-if r2 > 0.8:
-    print(" Excellent model (very accurate)")
-elif r2 > 0.6:
-    print(" Good model (acceptable predictions)")
-elif r2 > 0.4:
-    print(" Average model (needs improvement)")
-else:
-    print(" Poor model (needs tuning)")
-
-
-
-comparison = pd.DataFrame({
-    'Actual Sales': y_test.values,
-    'Predicted Sales': pred.flatten(),
-    'Error': y_test.values - pred.flatten()
-})
-
-print("\n SAMPLE PREDICTIONS (First 10 Rows)")
-print("-" * 40)
-print(comparison.head(10))
-
-
-
-avg_actual = np.mean(y_test)
-avg_pred = np.mean(pred)
-
-print("\n INSIGHTS")
-print("-" * 40)
-
-print(f" Average Actual Sales: {avg_actual:.2f}")
-print(f" Average Predicted Sales: {avg_pred:.2f}")
-
-if avg_pred > avg_actual:
-    print(" Model is slightly OVER-predicting sales")
-else:
-    print(" Model is slightly UNDER-predicting sales")
+df9=pd.DataFrame({'Actual':y_test,'Predicted':pred.flatten()})
+print(df9)
+print('MSE',mse)
+print('RMSE:',rmse)
+print('MAE:',mae)
+print('R2 Score:',r2)
 
 
 
@@ -741,8 +690,11 @@ else:
 
 
 
-     
 
+
+
+
+      
 
 
 
